@@ -3,61 +3,60 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-// ======================
-// ROUTE ACCUEIL (corrige "Cannot GET /")
-// ======================
+// =====================
+// VERIFY TOKEN (IMPORTANT META)
+// =====================
+const VERIFY_TOKEN = "restaurant123";
+
+// =====================
+// HOME
+// =====================
 app.get("/", (req, res) => {
-  res.send("🍽️ Bot restaurant actif sur Render 🚀");
+  res.send("🍽️ Bot WhatsApp actif sur Render 🚀");
 });
 
-// ======================
-// WEBHOOK TEST (WhatsApp / curl)
-// ======================
-app.post("/webhook", (req, res) => {
-  try {
-    const message = req.body.message;
+// =====================
+// VERIFY WEBHOOK (GET)
+// =====================
+app.get("/webhook", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
 
-    if (!message) {
-      return res.json({ reply: "❌ Aucun message reçu" });
-    }
-
-    const msg = message.toLowerCase();
-
-    let reply = "❓ Tape MENU pour commencer";
-
-    if (msg === "bonjour") {
-      reply = "🍽️ Bienvenue au Restaurant ! Tape MENU";
-    }
-
-    if (msg === "menu") {
-      reply =
-        "📋 MENU:\n1. Pizza 🍕\n2. Burger 🍔\n3. Frites 🍟\n\nRéponds 1, 2 ou 3";
-    }
-
-    if (msg === "1") {
-      reply = "🍕 Pizza commandée !";
-    }
-
-    if (msg === "2") {
-      reply = "🍔 Burger commandé !";
-    }
-
-    if (msg === "3") {
-      reply = "🍟 Frites commandées !";
-    }
-
-    return res.json({ reply });
-  } catch (error) {
-    console.log(error);
-    return res.json({ reply: "❌ Erreur serveur" });
+  if (mode && token === VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
+  } else {
+    return res.sendStatus(403);
   }
 });
 
-// ======================
-// LANCEMENT SERVEUR (RENDER)
-// ======================
+// =====================
+// RECEIVE MESSAGES (POST)
+// =====================
+app.post("/webhook", (req, res) => {
+  const message =
+    req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]?.text?.body || "";
+
+  let reply = "Tape MENU";
+
+  if (message.toLowerCase() === "bonjour") {
+    reply = "🍽️ Bienvenue ! Tape MENU";
+  }
+
+  if (message.toLowerCase() === "menu") {
+    reply = "1. Pizza 🍕\n2. Burger 🍔\n3. Frites 🍟";
+  }
+
+  console.log("Message reçu:", message);
+
+  res.json({ reply });
+});
+
+// =====================
+// START SERVER
+// =====================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log("Bot restaurant actif 🚀");
+  console.log("Bot WhatsApp actif 🚀");
 });
