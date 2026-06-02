@@ -1,24 +1,21 @@
 const express = require("express");
-const axios = require("axios");
 
 const app = express();
 app.use(express.json());
 
 // ======================
-// ROUTE TEST RENDER
+// ROUTE ACCUEIL (corrige "Cannot GET /")
 // ======================
 app.get("/", (req, res) => {
   res.send("🍽️ Bot restaurant actif sur Render 🚀");
 });
 
 // ======================
-// WEBHOOK (test curl / WhatsApp)
+// WEBHOOK TEST (WhatsApp / curl)
 // ======================
-app.post("/webhook", async (req, res) => {
+app.post("/webhook", (req, res) => {
   try {
     const message = req.body.message;
-
-    let reply = "❓ Je n'ai pas compris. Tape MENU";
 
     if (!message) {
       return res.json({ reply: "❌ Aucun message reçu" });
@@ -26,13 +23,15 @@ app.post("/webhook", async (req, res) => {
 
     const msg = message.toLowerCase();
 
+    let reply = "❓ Tape MENU pour commencer";
+
     if (msg === "bonjour") {
       reply = "🍽️ Bienvenue au Restaurant ! Tape MENU";
     }
 
     if (msg === "menu") {
       reply =
-        "📋 MENU:\n1. Pizza\n2. Burger\n3. Frites\n\nRéponds avec le numéro 😋";
+        "📋 MENU:\n1. Pizza 🍕\n2. Burger 🍔\n3. Frites 🍟\n\nRéponds 1, 2 ou 3";
     }
 
     if (msg === "1") {
@@ -55,7 +54,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 // ======================
-// START SERVER (RENDER)
+// LANCEMENT SERVEUR (RENDER)
 // ======================
 const PORT = process.env.PORT || 3000;
 
