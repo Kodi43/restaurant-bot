@@ -1,80 +1,64 @@
-const express = require("express")
-const axios = require("axios")
-const app = express()
+const express = require("express");
+const axios = require("axios");
 
-app.use(express.json())
+const app = express();
+app.use(express.json());
 
-// 🔑 METS TES INFOS ICI (IMPORTANT)
-const TOKEN = "EAAX8ZAcJWcCwBRtZCRduOOjotHfqy6CJ480lZCI4BAW3QY08MJ9hZB55kGMOzUZCCZBbLD0zjFAmkGEnZBr6I6SRqj04t7xDKnaR7QEp3easBi8Y3BFDMU5aTR9pCDfGguZCjE4ZCiteAGYU8ieeyZCZAjxMj8VTqnPZC5qX8WImep0wUH529Jvx0wzlluaxMEZCSfyyyOASfsR5AzBIioBYxLGrfQh103wTmAGN5HkpKHzqde1KyPFlhcgZDZD"
-const PHONE_ID = "1189715550889787"
+// ======================
+// ROUTE TEST RENDER
+// ======================
+app.get("/", (req, res) => {
+  res.send("🍽️ Bot restaurant actif sur Render 🚀");
+});
 
-// 📩 envoyer message WhatsApp
-async function sendMessage(to, text) {
-  try {
-    await axios.post(
-      `https://graph.facebook.com/v19.0/${PHONE_ID}/messages`,
-      {
-        messaging_product: "whatsapp",
-        to: to,
-        type: "text",
-        text: { body: text }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${TOKEN}`,
-          "Content-Type": "application/json"
-        }
-      }
-    )
-  } catch (err) {
-    console.log("Erreur envoi message", err.response?.data || err.message)
-  }
-}
-
-// 🔥 webhook WhatsApp
+// ======================
+// WEBHOOK (test curl / WhatsApp)
+// ======================
 app.post("/webhook", async (req, res) => {
+  try {
+    const message = req.body.message;
 
-  const msg = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]
+    let reply = "❓ Je n'ai pas compris. Tape MENU";
 
-  if (!msg) return res.sendStatus(200)
+    if (!message) {
+      return res.json({ reply: "❌ Aucun message reçu" });
+    }
 
-  const from = msg.from
-  const text = msg.text?.body?.toLowerCase()
+    const msg = message.toLowerCase();
 
-  let reply = ""
+    if (msg === "bonjour") {
+      reply = "🍽️ Bienvenue au Restaurant ! Tape MENU";
+    }
 
-  if (text === "bonjour") {
-    reply = `🍽️ Bienvenue au Restaurant !
+    if (msg === "menu") {
+      reply =
+        "📋 MENU:\n1. Pizza\n2. Burger\n3. Frites\n\nRéponds avec le numéro 😋";
+    }
 
-1️⃣ Menu
-2️⃣ Commander
-3️⃣ Horaires`
+    if (msg === "1") {
+      reply = "🍕 Pizza commandée !";
+    }
+
+    if (msg === "2") {
+      reply = "🍔 Burger commandé !";
+    }
+
+    if (msg === "3") {
+      reply = "🍟 Frites commandées !";
+    }
+
+    return res.json({ reply });
+  } catch (error) {
+    console.log(error);
+    return res.json({ reply: "❌ Erreur serveur" });
   }
+});
 
-  else if (text === "1") {
-    reply = `🍔 MENU :
-Burger - 5€
-Pizza - 8€
-Boisson - 2€`
-  }
+// ======================
+// START SERVER (RENDER)
+// ======================
+const PORT = process.env.PORT || 3000;
 
-  else if (text === "2") {
-    reply = "📦 Écris ta commande"
-  }
-
-  else if (text === "3") {
-    reply = "⏰ Ouvert 11h - 23h"
-  }
-
-  else {
-    reply = "Écris BONJOUR pour commencer"
-  }
-
-  await sendMessage(from, reply)
-
-  res.sendStatus(200)
-})
-
-app.listen(3000, () => {
-  console.log("Bot restaurant actif 🚀")
-})
+app.listen(PORT, () => {
+  console.log("Bot restaurant actif 🚀");
+});
